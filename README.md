@@ -1,0 +1,1 @@
+# diploma-doc-checker
