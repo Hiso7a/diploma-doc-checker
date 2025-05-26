@@ -1,0 +1,41 @@
+version: "3.6"
+
+services:
+  tika-service:
+    container_name: cogstack-tika-service
+    #image: cogstacksystems/tika-service:latest
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        - http_proxy=$HTTP_PROXY
+        - https_proxy=$HTTPS_PROXY
+        - no_proxy=$no_proxy
+    restart: always
+    shm_size: 1024mb
+    environment:
+      # limit the number of processing threads used by tesseract OCR,
+      # this should be used with care as processing for smaller documents (i.e < 10mb) is faster when limiting threads as
+      # the thread IPC and management does not interfere when using a single thread
+      # leave it to 1 if documents are small ( < 10mb) otherwise leave it as it is, changing to 0 will invalidate the variable
+      #- OMP_THREAD_LIMIT=128
+      #- OMP_NUM_THREADS=64
+      - OMP_DYNAMIC=TRUE
+      - OMP_NESTED=TRUE
+
+      # This option might be necessary on some systems if there's a java related error thrown
+      - JAVA_OPTIONS=-XX:MaxRAMFraction=2 -XX:MinRAMFraction=4
+      #- JAVA_OPTIONS=-Xmx:4096m -Xms:4096m
+    volumes:
+    - ../src/main/resources:/app/config:ro
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 262144
+    ports:
+    - "8090:8090"
+    # comment network_mode if you wish to use another port and uncomment the ports section
+    #network_mode: host
